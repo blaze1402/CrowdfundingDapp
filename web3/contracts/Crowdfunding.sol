@@ -14,7 +14,7 @@ contract Crowdfunding {
         uint256[] donations;
     }
 
-    mapping(uint256 => Campaign) public campaigns;
+    mapping(uint256 => Campaign) public listOfCampaigns;
 
     uint256 public numberOfCompaigns = 0;
 
@@ -26,7 +26,7 @@ contract Crowdfunding {
         uint256 _deadline,
         string memory _image
     ) public returns (uint256) {
-        Campaign storage campaign = campaigns[numberOfCompaigns];
+        Campaign storage campaign = listOfCampaigns[numberOfCompaigns];
 
         require(
             campaign.deadline < block.timestamp,
@@ -46,9 +46,34 @@ contract Crowdfunding {
         return numberOfCompaigns - 1;
     }
 
-    // function donateToCampaign() returns () {}
+    function donateToCampaign(uint256 _id) public payable {
+        uint256 amount = msg.value;
 
-    // function getDonators() returns () {}
+        Campaign storage campaign = listOfCampaigns[_id];
 
-    // function getCampaigns() returns () {}
+        campaign.donators.push(msg.sender);
+        campaign.donations.push(amount);
+
+        (bool sent,) = payable(campaign.owner).call{value: amount}("");
+
+        if (sent){
+            campaign.amountCollected = campaign.amountCollected + amount;
+        }
+    }
+
+    function getDonators(uint256 _id) view public returns (address[] memory, uint256[] memory) {
+        return (listOfCampaigns[_id].donators, listOfCampaigns[_id].donations);
+    }
+
+    function getCampaigns() public view returns (Campaign[] memory) {
+        Campaign[] memory allCampaigns = new Campaign[](numberOfCompaigns);
+
+        for (uint i=0; i<numberOfCompaigns; i++){
+            Campaign storage item = listOfCampaigns[i];
+
+            allCampaigns[i] = item;
+        }
+        
+        return allCampaigns;
+    }
 }
