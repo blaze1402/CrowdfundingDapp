@@ -10,7 +10,7 @@ import './main.css';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
-    <ThirdwebProvider activeChain={ Sepolia }>
+    <ThirdwebProvider activeChain={Sepolia}>
         <Router>
             <App />
         </Router>
