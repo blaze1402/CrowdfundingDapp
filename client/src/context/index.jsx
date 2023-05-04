@@ -15,19 +15,48 @@ export const StateContextProvider = ({ children }) => {
 
     const publishCampaign = async (form) => {
         try {
-            const data = await createCampaign({args:[
-                address, //owner
-                form.title, //title
-                form.description, //description
-                form.target, // target money
-                new Date(form.deadline).getTime(),
-                form.image
-            ]})
+            const data = await createCampaign({
+                args: [
+                    address, //owner
+                    form.title, //title
+                    form.description, //description
+                    form.target, // target money
+                    new Date(form.deadline).getTime(),
+                    form.image
+                ]
+            })
             console.log('contract call success', data);
         }
         catch (error) {
             console.log('contract call failure', error);
         }
+    }
+
+    const getCampaigns = async () => {
+        const campaigns = await contract.call('getCampaigns');
+
+        const parsedCampaigns = campaigns.map((campaign, i) => ({
+            owner: campaign.owner,
+            title: campaign.title,
+            description: campaign.description,
+            target: ethers.utils.formatEther(campaign.target.toString()),
+            deadline: campaign.deadline.toNumber(),
+            amountCollected: ethers.utils.formatEther(campaign.amountCollected.toString()),
+            image: campaign.image,
+            pId: i
+        }));
+
+        return parsedCampaigns;
+    }
+
+    const getUserCampaigns = async () => {
+        const allCampaigns = await getCampaigns();
+
+        const filteredCampaigns = allCampaigns.filter((campaign) => (
+            campaign.owner === address
+        ));
+
+        return filteredCampaigns;
     }
 
     return (
@@ -37,8 +66,9 @@ export const StateContextProvider = ({ children }) => {
                 contract,
                 connect,
                 createCampaign: publishCampaign,
-            }}
-        >
+                getCampaigns,
+                getUserCampaigns
+            }}>
             {children}
         </StateContext.Provider>
     )
